@@ -61,6 +61,14 @@ def parse_cp2k_output_advanced(fstring):  # pylint: disable=too-many-locals, too
             result_dict['exceeded_walltime'] = True
         if "ABORT" in line:
             result_dict["aborted"] = True
+        if "MOMENTS" in line:
+            dipole_moments = _parse_moments()
+            result_dict["dipole_moments"] = {
+                "Computed" : True,
+                "X component" : dipole_moments[0],
+                "Y component" : dipole_moments[1],
+                "Z component" : dipole_moments[2],
+            } 
         if "KPOINTS| Band Structure Calculation" in line:
             kpoints, labels, bands = _parse_bands(lines, i_line, cp2k_version)
             result_dict["kpoint_data"] = {
@@ -142,7 +150,7 @@ def parse_cp2k_output_advanced(fstring):  # pylint: disable=too-many-locals, too
 
         ####################################################################
         #  THIS SECTION PARSES THE PROPERTIES AT GOE_OPT/CELL_OPT/MD STEP  #
-        #  BC: it can be not robust!                                         #
+        #  BC: it can be not robust!                                       #
         ####################################################################
         if 'run_type' in result_dict.keys() and result_dict['run_type'] in [
                 'ENERGY', 'ENERGY_FORCE', 'GEO_OPT', 'CELL_OPT', 'MD', 'MD-NVT', 'MD-NPT_F'
@@ -311,6 +319,10 @@ def _parse_bands_cp2k_greater_81(lines, line_n):
             break
     return spin, kpoint, bands
 
+def _parse_moments(lines):
+    dipole_moments = []
+
+    return np.array(dipole_moments)
 
 def _parse_bands(lines, n_start, cp2k_version):
     """Parse band structure from the CP2K output."""
@@ -359,7 +371,6 @@ def _parse_bands(lines, n_start, cp2k_version):
 
     return np.array(kpoints), labels, np.array(bands)
 
-
 def parse_cp2k_trajectory(content):
     """CP2K trajectory parser."""
 
@@ -401,6 +412,8 @@ def parse_cp2k_trajectory(content):
 
     return {"symbols": symbols, "positions": positions, "cell": cell, "tags": tags, "pbc": cell_pbc}
 
+# added support for the creation of a separate ArrayData node with the atomic forces included
+
 def parse_cp2k_forces(string):
     """ CP2K atomic force parser """
     lines = string.splitlines()
@@ -437,3 +450,14 @@ def parse_cp2k_forces(string):
 
     # return the force array
     return force_array
+
+def parse_cp2k_dpmoments(string):
+    """ CP2K dipole moment parser """
+    lines = string.splitlines()
+    for line in lines:
+        if 'X=' in line:
+            dipole_split = line.split()
+            dipole_moments = [dipole_split[1], dipole_split[3], dipole_split[5], dipole_split[-1]]
+    
+    return np.array(dipole_moments)
+
