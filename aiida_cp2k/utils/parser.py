@@ -61,14 +61,7 @@ def parse_cp2k_output_advanced(fstring):  # pylint: disable=too-many-locals, too
             result_dict['exceeded_walltime'] = True
         if "ABORT" in line:
             result_dict["aborted"] = True
-        if "MOMENTS" in line:
-            dipole_moments = _parse_moments()
-            result_dict["dipole_moments"] = {
-                "Computed" : True,
-                "X component" : dipole_moments[0],
-                "Y component" : dipole_moments[1],
-                "Z component" : dipole_moments[2],
-            } 
+    
         if "KPOINTS| Band Structure Calculation" in line:
             kpoints, labels, bands = _parse_bands(lines, i_line, cp2k_version)
             result_dict["kpoint_data"] = {
