@@ -124,7 +124,9 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
                 }
                 dipole_string = self.retrieved.get_object_content(retrieved_file)
             else: 
-                result_dict['dipole_moments']['computed'] = False
+                result_dict['dipole_moments'] = {
+                    'computed': False
+                }
 
         # nwarnings is the last thing to be printed in the CP2K output file:
         # if it is not there, CP2K didn't finish properly
