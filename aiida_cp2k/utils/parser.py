@@ -312,10 +312,6 @@ def _parse_bands_cp2k_greater_81(lines, line_n):
             break
     return spin, kpoint, bands
 
-def _parse_moments(lines):
-    dipole_moments = []
-
-    return np.array(dipole_moments)
 
 def _parse_bands(lines, n_start, cp2k_version):
     """Parse band structure from the CP2K output."""
