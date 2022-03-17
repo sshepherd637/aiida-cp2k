@@ -116,10 +116,7 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
 
         for retrieved_file in self.retrieved.list_object_names():
             if regex.search('moments', retrieved_file):
-                result_dict['dipole_moments'] = {
-                    'computed': True,
-                    'moments': ''
-                }
+                result_dict['dipole_moments'] = True
                 dipole_string = self.retrieved.get_object_content(retrieved_file)
            
         # nwarnings is the last thing to be printed in the CP2K output file:
@@ -171,8 +168,13 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
             array.set_array('forces', force_array)
             self.out("atomic_forces", array)
 
-        if result_dict['dipole_moments']['computed'] == True:
-            result_dict['dipole_moments']['moments'] = parse_cp2k_dipoles(dipole_string)
+        if result_dict['dipole_moments'] == True:
+            dipole_array = parse_cp2k_dipoles(dipole_string)
+            result_dict['dipole_data'] = {
+                'X': dipole_array[0],
+                'Y': dipole_array[1],
+                'Z': dipole_array[2],
+            }
 
         self.out("output_parameters", Dict(dict=result_dict))
         return None
