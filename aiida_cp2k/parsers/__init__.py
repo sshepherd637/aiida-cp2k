@@ -171,9 +171,9 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
         if result_dict['dipole_moments'] == True:
             dipole_array = parse_cp2k_dipoles(dipole_string)
             result_dict['dipole_data'] = {
-                'X': dipole_array[0],
-                'Y': dipole_array[1],
-                'Z': dipole_array[2],
+                'X': float(dipole_array[0]),
+                'Y': float(dipole_array[1]),
+                'Z': float(dipole_array[2]),
             }
 
         self.out("output_parameters", Dict(dict=result_dict))
