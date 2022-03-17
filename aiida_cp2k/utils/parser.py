@@ -444,7 +444,7 @@ def parse_cp2k_forces(string):
     # return the force array
     return force_array
 
-def parse_cp2k_dpmoments(string):
+def parse_cp2k_dipoles(string):
     """ CP2K dipole moment parser """
     lines = string.splitlines()
     for line in lines:

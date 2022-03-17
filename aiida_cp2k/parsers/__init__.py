@@ -101,9 +101,7 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
     def _parse_stdout(self):
         """Advanced CP2K output file parser."""
 
-        from aiida_cp2k.utils import parse_cp2k_output_advanced
-        from aiida_cp2k.utils import parse_cp2k_forces
-        from aiida_cp2k.utils import parse_cp2k_dpmoments        
+        from aiida_cp2k.utils import parse_cp2k_output_advanced, parse_cp2k_forces, parse_cp2k_dipoles
 
         fname = self.node.process_class._DEFAULT_OUTPUT_FILE  # pylint: disable=protected-access
         if fname not in self.retrieved.list_object_names():
@@ -178,7 +176,7 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
             self.out("atomic_forces", array)
 
         if result_dict['dipole_moments']['computed'] == True:
-            result_dict['dipole_moments']['moments'] = parse_cp2k_dpmoments(dipole_string)
+            result_dict['dipole_moments']['moments'] = parse_cp2k_dipoles(dipole_string)
 
         self.out("output_parameters", Dict(dict=result_dict))
         return None
