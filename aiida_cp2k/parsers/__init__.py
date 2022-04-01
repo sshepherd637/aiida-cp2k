@@ -168,7 +168,7 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
             array.set_array('forces', force_array)
             self.out("atomic_forces", array)
 
-        if result_dict['dipole_moments'] == True:
+        if 'dipole_moments' in result_dict:
             dipole_array = parse_cp2k_dipoles(dipole_string)
             result_dict['dipole_data'] = {
                 'X': float(dipole_array[0]),
