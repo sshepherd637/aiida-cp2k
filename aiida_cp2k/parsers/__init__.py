@@ -9,6 +9,7 @@
 
 import io
 import os
+import re as regex
 from aiida.common import exceptions
 
 from aiida.parsers import Parser
@@ -16,8 +17,10 @@ from aiida.common import OutputParsingError, NotExistent
 from aiida.engine import ExitCode
 from aiida.orm import Dict
 from aiida.plugins import DataFactory
+from sympy import re
 
-StructureData = DataFactory('structure')  # pylint: disable=invalid-name
+
+StructureData = DataFactory('core.structure')  # pylint: disable=invalid-name
 BandsData = DataFactory('array.bands')  # pylint: disable=invalid-name
 
 
@@ -56,7 +59,7 @@ class Cp2kBaseParser(Parser):
 
         if fname not in self.retrieved.list_object_names():
             return self.exit_codes.ERROR_OUTPUT_STDOUT_MISSING
-
+        
         try:
             output_string = self.retrieved.get_object_content(fname)
         except IOError:
@@ -98,7 +101,7 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
     def _parse_stdout(self):
         """Advanced CP2K output file parser."""
 
-        from aiida_cp2k.utils import parse_cp2k_output_advanced
+        from aiida_cp2k.utils import parse_cp2k_output_advanced, parse_cp2k_forces, parse_cp2k_dipoles
 
         fname = self.node.process_class._DEFAULT_OUTPUT_FILE  # pylint: disable=protected-access
         if fname not in self.retrieved.list_object_names():
@@ -111,7 +114,12 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
 
         result_dict = parse_cp2k_output_advanced(output_string)
 
-        # nwarnings is the last thing to be printed in th eCP2K output file:
+        for retrieved_file in self.retrieved.list_object_names():
+            if regex.search('moments', retrieved_file):
+                result_dict['dipole_moments'] = True
+                dipole_string = self.retrieved.get_object_content(retrieved_file)
+           
+        # nwarnings is the last thing to be printed in the CP2K output file:
         # if it is not there, CP2K didn't finish properly
         if 'nwarnings' not in result_dict:
             raise OutputParsingError("CP2K did not finish properly.")
@@ -148,6 +156,25 @@ class Cp2kAdvancedParser(Cp2kBaseParser):
                 units=kpoint_data["bands_unit"],
             )
             self.out("output_bands", bnds)
+
+        if result_dict["run_type"] == 'ENERGY_FORCE':
+            result_dict['atomic_force_data'] = {
+                'output_array': True,
+                'ArrayData name': "forces"
+            } 
+            force_array = parse_cp2k_forces(output_string)
+            ArrayData = DataFactory('array')
+            array = ArrayData()
+            array.set_array('forces', force_array)
+            self.out("atomic_forces", array)
+
+        if 'dipole_moments' in result_dict:
+            dipole_array = parse_cp2k_dipoles(dipole_string)
+            result_dict['dipole_data'] = {
+                'X': float(dipole_array[0]),
+                'Y': float(dipole_array[1]),
+                'Z': float(dipole_array[2]),
+            }
 
         self.out("output_parameters", Dict(dict=result_dict))
         return None
